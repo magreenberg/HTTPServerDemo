@@ -1,6 +1,7 @@
 package demo;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -22,26 +23,35 @@ public class HTTPServerDemo {
 		HttpServer server;
 		int port = DEFAULT_HTTP_SERVER_PORT;
 
-		String sport = System.getenv("HTTP_SERVER_PORT");
-		if (sport != null && sport.length() > 0) {
+		String serverPort = System.getenv("HTTP_SERVER_PORT");
+		if (serverPort != null && serverPort.length() > 0) {
 			try {
-				port = Integer.parseInt(sport);
+				port = Integer.parseInt(serverPort);
 			} catch (Exception e) {
-				System.out.println("Invalid port specified: " + sport);
+				System.out.println("Invalid port specified: " + serverPort);
 				System.exit(1);
 			}
 		}
 
 		try {
 			server = HttpServer.create(new InetSocketAddress(port), 0);
+
+			//Create end points
 			// HttpContext rootContext = server.createContext("/");
 			// rootContext.setHandler(HTTPServerDemo::handleRootRequest);
 			HttpContext greetContext = server.createContext("/greet");
 			greetContext.setHandler(HTTPServerDemo::handleGreetRequest);
+
 			HttpContext timeContext = server.createContext("/gettime");
 			timeContext.setHandler(HTTPServerDemo::handleTimeRequest);
+
 			HttpContext convertContext = server.createContext("/convert");
 			convertContext.setHandler(HTTPServerDemo::handleConvertRequest);
+
+			HttpContext echoContext = server.createContext("/echo");
+			echoContext.setHandler(HTTPServerDemo::handleEchoRequest);
+
+			// start the HTTP server
 			server.start();
 			System.out.println("Started HTTP server on port " + port);
 		} catch (IOException e) {
@@ -52,12 +62,14 @@ public class HTTPServerDemo {
 
 	static Map<String, String> queryToMap(String query) {
 		Map<String, String> result = new HashMap<>();
-		for (String param : query.split("&", 0)) {
-			String[] entry = param.split("=");
-			if (entry.length > 1) {
-				result.put(entry[0], entry[1]);
-			} else {
-				result.put(entry[0], "");
+		if (query != null) {
+			for (String param : query.split("&", 0)) {
+				String[] entry = param.split("=");
+				if (entry.length > 1) {
+					result.put(entry[0], entry[1]);
+				} else {
+					result.put(entry[0], "");
+				}
 			}
 		}
 		return result;
@@ -74,7 +86,8 @@ public class HTTPServerDemo {
 		return s == null || s.trim().length() == 0;
 	}
 
-	// convert?source=inch&target=cm&value=1'
+	// respond with a conversion of the form:
+	// curl http://localhost:8080/'convert?source=inch&target=cm&value=1'
 	private static void handleConvertRequest(HttpExchange exchange) throws IOException {
 		Map<String, String> params = queryToMap(exchange.getRequestURI().getQuery());
 		String source = params.get("source");
@@ -98,11 +111,38 @@ public class HTTPServerDemo {
 		postResponse(returnCode, message, exchange);
 	}
 
+	// post back value received
+	// curl -v -d "this is a test" -X PUT localhost:8080/echo
+	private static void handleEchoRequest(HttpExchange exchange) throws IOException {
+		String message = "";
+		int returnCode = HTTP_OK;
+		if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())
+		 && !"PUT".equalsIgnoreCase(exchange.getRequestMethod())) {
+			message = "Invocation must be performed with POST method";
+			returnCode = 422;
+		} else {
+			StringBuilder sb = new StringBuilder();
+			InputStream ios = exchange.getRequestBody();
+			int i;
+			while ((i = ios.read()) != -1) {
+				sb.append((char) i);
+			}
+			if (sb.length() == 0) {
+				returnCode = 411;
+			} else {
+				message = sb.toString();
+			}
+		}
+		postResponse(returnCode, message, exchange);
+	}
+
+	// respond with a greeting
 	private static void handleGreetRequest(HttpExchange exchange) throws IOException {
 		String message = "Greetings from the HTTPServerDemo application!\n";
 		postResponse(HTTP_OK, message, exchange);
 	}
 
+	// respond with the current time and host running the server
 	private static void handleTimeRequest(HttpExchange exchange) throws IOException {
 		String hostname = InetAddress.getLocalHost().getHostName();
 		if (hostname == null) {
