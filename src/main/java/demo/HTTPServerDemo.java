@@ -36,7 +36,7 @@ public class HTTPServerDemo {
 		try {
 			server = HttpServer.create(new InetSocketAddress(port), 0);
 
-			//Create end points
+			// Create end points
 			// HttpContext rootContext = server.createContext("/");
 			// rootContext.setHandler(HTTPServerDemo::handleRootRequest);
 			HttpContext greetContext = server.createContext("/greet");
@@ -50,6 +50,9 @@ public class HTTPServerDemo {
 
 			HttpContext echoContext = server.createContext("/echo");
 			echoContext.setHandler(HTTPServerDemo::handleEchoRequest);
+
+			HttpContext deleteContext = server.createContext("/delete");
+			deleteContext.setHandler(HTTPServerDemo::handleDeleteRequest);
 
 			// start the HTTP server
 			server.start();
@@ -117,8 +120,9 @@ public class HTTPServerDemo {
 		String message = "";
 		int returnCode = HTTP_OK;
 		if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())
-		 && !"PUT".equalsIgnoreCase(exchange.getRequestMethod())) {
-			message = "Invocation must be performed with POST method";
+				&& !"PUT".equalsIgnoreCase(exchange.getRequestMethod())
+				&& !"PATCH".equalsIgnoreCase(exchange.getRequestMethod())) {
+			message = "Invocation must be performed with POST/PUT/PATCH method";
 			returnCode = 422;
 		} else {
 			StringBuilder sb = new StringBuilder();
@@ -150,5 +154,18 @@ public class HTTPServerDemo {
 		}
 		String message = "Host: " + hostname + " @ " + Instant.now() + "\n";
 		postResponse(HTTP_OK, message, exchange);
+	}
+
+	// curl -X DELETE http://localhost:8080/delete/100
+	private static void handleDeleteRequest(HttpExchange exchange) throws IOException {
+		String message = "";
+		int returnCode = HTTP_OK;
+		if (!"DELETE".equalsIgnoreCase(exchange.getRequestMethod())) {
+			message = "Invocation must be performed with DELETE method";
+			returnCode = 422;
+		} else {
+			message = exchange.getRequestURI().toString();
+		}
+		postResponse(returnCode, message, exchange);
 	}
 }
