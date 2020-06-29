@@ -43,6 +43,8 @@ objects:
       spec:
         containers:
           - env:
+              - name: HTTP_SERVER_PORT
+                value: ${HTTP_PORT}
             image: ${APPLICATION_IMAGE}
             imagePullPolicy: Always
             name: httpserverdemo

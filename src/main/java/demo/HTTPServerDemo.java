@@ -117,6 +117,7 @@ public class HTTPServerDemo {
 	// post back value received
 	// curl -v -d "this is a test" -X PUT localhost:8080/echo
 	private static void handleEchoRequest(HttpExchange exchange) throws IOException {
+		System.out.println(exchange.getRequestMethod() + " " + exchange.getRequestURI().toString());
 		String message = "";
 		int returnCode = HTTP_OK;
 		if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())
@@ -142,12 +143,15 @@ public class HTTPServerDemo {
 
 	// respond with a greeting
 	private static void handleGreetRequest(HttpExchange exchange) throws IOException {
-		String message = "Greetings from the HTTPServerDemo application!\n";
+		System.out.println(exchange.getRequestMethod() + " " + exchange.getRequestURI().toString());
+		String message = "New greetings from the HTTPServerDemo application!\n";
 		postResponse(HTTP_OK, message, exchange);
 	}
 
+	// curl http://localhost:8080/gettime
 	// respond with the current time and host running the server
 	private static void handleTimeRequest(HttpExchange exchange) throws IOException {
+		System.out.println(exchange.getRequestMethod() + " " + exchange.getRequestURI().toString());
 		String hostname = InetAddress.getLocalHost().getHostName();
 		if (hostname == null) {
 			hostname = InetAddress.getLocalHost().toString();
@@ -158,6 +162,7 @@ public class HTTPServerDemo {
 
 	// curl -X DELETE http://localhost:8080/delete/100
 	private static void handleDeleteRequest(HttpExchange exchange) throws IOException {
+		System.out.println(exchange.getRequestMethod() + " " + exchange.getRequestURI().toString());
 		String message = "";
 		int returnCode = HTTP_OK;
 		if (!"DELETE".equalsIgnoreCase(exchange.getRequestMethod())) {
