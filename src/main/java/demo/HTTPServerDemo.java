@@ -117,7 +117,6 @@ public class HTTPServerDemo {
 	// post back value received
 	// curl -v -d "this is a test" -X PUT localhost:8080/echo
 	private static void handleEchoRequest(HttpExchange exchange) throws IOException {
-		System.out.println(exchange.getRequestMethod() + " " + exchange.getRequestURI().toString());
 		String message = "";
 		int returnCode = HTTP_OK;
 		if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())
@@ -138,6 +137,10 @@ public class HTTPServerDemo {
 				message = sb.toString();
 			}
 		}
+		System.out.println(exchange.getRequestMethod() +
+			" " +
+			exchange.getRequestURI().toString() +
+			" \"" + message + "\"");
 		postResponse(returnCode, message, exchange);
 	}
 
