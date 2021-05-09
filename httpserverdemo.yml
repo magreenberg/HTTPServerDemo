@@ -19,7 +19,7 @@ objects:
     selector:
       app: httpserverdemo
     sessionAffinity: None
-    type: ClusterIP
+    #type: LoadBalancer
   status:
     loadBalancer: {}
 - apiVersion: apps.openshift.io/v1
@@ -71,4 +71,4 @@ parameters:
     value: "8080"
   - name: APPLICATION_IMAGE
     description: Image
-    value: quay.io/mgreenbe/httpserverdemo:1
+    value: image-registry.openshift-image-registry.svc:5000/openshift/httpserverdemo:1
